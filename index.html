@@ -2,7 +2,6 @@
 <html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
-    <!-- تم إعادة تفعيل الزوم الطبيعي للأصابع بإزالة المنع ورفع الحد الأقصى للتكبير -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>Rice Palace Menu</title>
     
@@ -12,144 +11,8 @@
     <!-- مكتبة FontAwesome للأيقونات -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-        body {
-            background-color: #f3efe6;
-            background-image: 
-                radial-gradient(circle at 50% 50%, rgba(200, 180, 150, 0.2) 2px, transparent 2.5px),
-                repeating-linear-gradient(45deg, rgba(180, 160, 130, 0.05) 0, rgba(180, 160, 130, 0.05) 10px, transparent 10px, transparent 20px);
-            background-size: 30px 30px, 40px 40px;
-            overflow: auto; /* السماح بالتمرير الطبيعي عند التكبير */
-            touch-action: pan-x pan-y pinch-zoom; /* السماح للمتصفح بفهم حركة الزوم والنزول/الطلوع */
-            font-family: system-ui, -apple-system, sans-serif;
-        }
-
-        #zoom-wrapper {
-            width: 100vw;
-            height: calc(100vh - 60px); 
-            overflow: auto; /* ضروري للنزول والطلوع بعد تكبير الأزرار */
-            display: flex;
-            justify-content: center;
-            align-items: flex-start; /* تم التعديل لمنع قطع الصفحة من الأعلى عند التكبير */
-            padding-top: 2vh;
-            transition: transform 0.3s ease;
-        }
-
-        .container {
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .page {
-            background-color: #ffffff;
-            overflow: hidden;
-            box-shadow: 0 0 15px rgba(0,0,0,0.15);
-        }
-        .page img {
-            width: 100%;
-            height: 100%;
-            object-fit: fill;
-            pointer-events: none;
-        }
-
-        /* شريط التحكم السفلي */
-        .bottom-toolbar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 60px;
-            background-color: #2c2c2c; 
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 15px;
-            z-index: 1000;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
-        }
-
-        .toolbar-group {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .tool-btn {
-            background: none;
-            border: none;
-            color: #ffffff;
-            font-size: 20px;
-            cursor: pointer;
-            transition: color 0.2s, transform 0.1s;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 35px;
-            height: 35px;
-        }
-        .tool-btn:hover { color: #d4cbb8; }
-        .tool-btn:active { transform: scale(0.9); }
-
-        .page-indicator-pill {
-            background-color: #ffffff;
-            color: #333333;
-            padding: 5px 20px;
-            border-radius: 20px;
-            font-size: 15px;
-            font-weight: bold;
-            min-width: 90px;
-            text-align: center;
-            pointer-events: none;
-        }
-
-        .nav-arrow {
-            font-size: 24px;
-            color: #ffffff;
-            cursor: pointer;
-            padding: 0 10px;
-            transition: 0.2s;
-        }
-        .nav-arrow:hover { color: #d4cbb8; transform: scale(1.1); }
-
-        /* الأنيميشن الإرشادي */
-        .tutorial-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6);
-            z-index: 2000;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            transition: opacity 0.5s;
-        }
-        .hand-icon {
-            font-size: 60px;
-            animation: swipeHand 1.5s infinite ease-in-out;
-        }
-        .tutorial-text {
-            margin-top: 20px;
-            font-size: 20px;
-            font-weight: bold;
-        }
-        @keyframes swipeHand {
-            0% { transform: translateX(50px) rotate(0deg); opacity: 0; }
-            30% { opacity: 1; }
-            70% { transform: translateX(-50px) rotate(-20deg); opacity: 1; }
-            100% { transform: translateX(-50px) rotate(-20deg); opacity: 0; }
-        }
-        .hidden { opacity: 0 !important; pointer-events: none !important; }
-
-    </style>
+    <!-- ربط ملف التنسيقات الخارجي -->
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
@@ -175,8 +38,8 @@
     <!-- شريط التحكم السفلي -->
     <div class="bottom-toolbar">
         <div class="toolbar-group">
-            <button class="tool-btn" id="btn-zoom-in" onclick="changeZoom(1)"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
-            <button class="tool-btn" id="btn-zoom-out" onclick="changeZoom(-1)"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+            <button class="tool-btn" id="btn-zoom-in" onclick="changeZoom(0.5)"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+            <button class="tool-btn" id="btn-zoom-out" onclick="changeZoom(-0.5)"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
             <button class="tool-btn" id="btn-sound" onclick="toggleSound()"><i class="fa-solid fa-volume-high" id="sound-icon"></i></button>
         </div>
 
@@ -191,132 +54,7 @@
         </div>
     </div>
 
-    <script>
-        const flipAudio = new Audio('flip.mp3');
-        let soundEnabled = true;
-        let currentPage = 1;
-        const totalPages = 6;
-        let currentZoom = 1;
-
-        const unlockAudio = () => {
-            flipAudio.play().then(() => {
-                flipAudio.pause();
-                flipAudio.currentTime = 0;
-            }).catch(() => {});
-            document.removeEventListener('touchstart', unlockAudio);
-            document.removeEventListener('click', unlockAudio);
-        };
-        document.addEventListener('touchstart', unlockAudio, { once: true });
-        document.addEventListener('click', unlockAudio, { once: true });
-
-        function playPaperSound() {
-            if (!soundEnabled) return;
-            try {
-                flipAudio.currentTime = 0;
-                flipAudio.play().catch(() => {});
-            } catch (e) {}
-        }
-
-        function toggleSound() {
-            soundEnabled = !soundEnabled;
-            const icon = document.getElementById('sound-icon');
-            icon.className = soundEnabled ? "fa-solid fa-volume-high" : "fa-solid fa-volume-xmark";
-        }
-
-        // تحسين زوم الأزرار ليسمح بالتمرير والنزول والطلوع
-        function changeZoom(direction) {
-            const flipbook = document.getElementById('flipbook');
-            const wrapper = document.getElementById('zoom-wrapper');
-            
-            if (direction > 0 && currentZoom < 2.5) {
-                currentZoom += 0.5;
-            } else if (direction < 0 && currentZoom > 1) {
-                currentZoom -= 0.5;
-            }
-            
-            flipbook.style.transform = `scale(${currentZoom})`;
-            flipbook.style.transformOrigin = "top center";
-            
-            // إضافة مساحة وهمية سفلية لإجبار المتصفح على إظهار شريط التمرير عند التكبير بالأزرار
-            if(currentZoom > 1) {
-                flipbook.style.marginBottom = `${currentZoom * 300}px`; 
-            } else {
-                flipbook.style.marginBottom = "0";
-                wrapper.scrollTop = 0;
-            }
-        }
-
-        function toggleFullScreen() {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(() => {});
-            } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                }
-            }
-        }
-
-        // الكود الذكي لمنع تداخل التقليب مع حركة النزول والطلوع والزوم
-        const blockFlipWhenZoomed = (e) => {
-            const isNativeZoomed = window.visualViewport && window.visualViewport.scale > 1.01;
-            const isJSZoomed = currentZoom > 1;
-            const isMultiTouch = e.touches && e.touches.length > 1;
-            
-            // إذا كان المستخدم مكبراً للشاشة أو يضع إصبعين، يتم إيقاف التقليب ليتمكن من السحب للأسفل والأعلى بحرية
-            if (isNativeZoomed || isJSZoomed || isMultiTouch) {
-                e.stopPropagation(); 
-            }
-        };
-
-        const flipbookEl = document.getElementById('flipbook');
-        // اعتراض اللمس قبل أن تستلمه المكتبة
-        flipbookEl.addEventListener('touchstart', blockFlipWhenZoomed, { capture: true });
-        flipbookEl.addEventListener('touchmove', blockFlipWhenZoomed, { capture: true });
-        flipbookEl.addEventListener('touchend', blockFlipWhenZoomed, { capture: true });
-        flipbookEl.addEventListener('pointerdown', blockFlipWhenZoomed, { capture: true });
-        flipbookEl.addEventListener('pointermove', blockFlipWhenZoomed, { capture: true });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const pageFlip = new St.PageFlip(flipbookEl, {
-                width: 450,
-                height: 650,
-                size: 'stretch',
-                minWidth: 300,
-                maxWidth: 1000,
-                minHeight: 400,
-                maxHeight: 1200,
-                maxShadowOpacity: 0.4, 
-                showCover: true, 
-                usePortrait: true, 
-                mobileScrollSupport: false,
-                flippingTime: 600
-            });
-
-            pageFlip.loadFromHTML(document.querySelectorAll('.page'));
-
-            const hideTutorial = () => {
-                document.getElementById('tutorial').classList.add('hidden');
-            };
-            
-            document.body.addEventListener('touchstart', hideTutorial, { once: true });
-            document.body.addEventListener('mousedown', hideTutorial, { once: true });
-
-            document.getElementById('btn-prev').addEventListener('click', () => {
-                pageFlip.flipPrev();
-                hideTutorial();
-            });
-            
-            document.getElementById('btn-next').addEventListener('click', () => {
-                pageFlip.flipNext();
-                hideTutorial();
-            });
-
-            pageFlip.on('flip', (e) => {
-                playPaperSound();
-                currentPage = e.data + 1;
-                document.getElementById('counter').innerText = `${currentPage} / ${totalPages}`;
-            });
-        });
-    </script>
+    <!-- ربط ملف البرمجة الخارجي -->
+    <script src="script.js"></script>
 </body>
 </html>
