@@ -1,23 +1,31 @@
+// ==========================================
+// 1. المتغيرات والإعدادات العامة
+// ==========================================
 const flipAudio = new Audio('flip.mp3');
 let soundEnabled = true;
 let currentPage = 1;
 const totalPages = 6;
+let pageFlipInstance = null;
 
-// متغيرات التحكم بالزوم والتحريك
-let currentScale = 1;
+// متغيرات التحكم بالتحريك والتكبير (Pan & Zoom)
+let scale = 1;
 let minScale = 1;
-let maxScale = 4;
-let currentX = 0;
-let currentY = 0;
+let maxScale = 3.5;
+let pointX = 0;
+let pointY = 0;
 let startX = 0;
 let startY = 0;
+let isPanning = false;
 let initialPinchDistance = null;
 let lastTapTime = 0;
 
-const container = document.getElementById('book-container');
+const bookContainer = document.getElementById('book-container');
 const zoomWrapper = document.getElementById('zoom-wrapper');
+const flipbookEl = document.getElementById('flipbook');
 
-// تفعيل الصوت عند أول تفاعل
+// ==========================================
+// 2. إدارة الصوت والتفاعل الأول
+// ==========================================
 const unlockAudio = () => {
     flipAudio.play().then(() => {
         flipAudio.pause();
@@ -43,22 +51,37 @@ function toggleSound() {
     icon.className = soundEnabled ? "fa-solid fa-volume-high" : "fa-solid fa-volume-xmark";
 }
 
-// تحديث موقع وحجم المنيو
+// ==========================================
+// 3. المحرك الاحترافي للتكبير والتحريك (Pan & Zoom Engine)
+// ==========================================
 function updateTransform() {
-    if (currentScale <= 1) {
-        currentScale = 1;
-        currentX = 0;
-        currentY = 0;
+    // تقييد الحركة لكي لا تخرج الصفحة خارج حدود الشاشة عند التكبير
+    if (scale <= 1) {
+        scale = 1;
+        pointX = 0;
+        pointY = 0;
+        // إعادة التفاعل لمكتبة تقليب الصفحات عند الحجم الطبيعي
+        flipbookEl.style.pointerEvents = "auto";
+    } else {
+        // تعطيل تفاعل مكتبة التقليب تماماً عند التكبير لمنع التداخل والتقليب العشوائي
+        flipbookEl.style.pointerEvents = "none";
     }
-    container.style.transform = `translate(${currentX}px, ${currentY}px) scale(${currentScale})`;
+
+    bookContainer.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`;
 }
 
-// زوم الأزرار
-function changeZoom(delta) {
-    let newScale = currentScale + delta;
-    newScale = Math.min(Math.max(minScale, newScale), maxScale);
-    currentScale = newScale;
+function applyZoom(newScale) {
+    scale = Math.min(Math.max(minScale, newScale), maxScale);
+    if (scale === 1) {
+        pointX = 0;
+        pointY = 0;
+    }
     updateTransform();
+}
+
+function changeZoom(direction) {
+    let targetScale = scale + (direction > 0 ? 0.5 : -0.5);
+    applyZoom(targetScale);
 }
 
 function toggleFullScreen() {
@@ -71,20 +94,9 @@ function toggleFullScreen() {
     }
 }
 
-// حظر التقليب تماماً عند التكبير
-const flipbookEl = document.getElementById('flipbook');
-
-function blockFlipWhenZoomed(e) {
-    if (currentScale > 1) {
-        e.stopPropagation();
-    }
-}
-
-['touchstart', 'touchmove', 'touchend', 'pointerdown', 'pointermove', 'pointerup'].forEach(eventType => {
-    flipbookEl.addEventListener(eventType, blockFlipWhenZoomed, { capture: true });
-});
-
-// التعامل مع لمس الشاشة (Pinch Zoom & Double Tap)
+// ==========================================
+// 4. معالجة إيماءات اللمس (Pinch Zoom & Double Tap & Pan)
+// ==========================================
 function getPinchDistance(e) {
     return Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
@@ -93,41 +105,47 @@ function getPinchDistance(e) {
 }
 
 zoomWrapper.addEventListener('touchstart', (e) => {
+    // 1. Double Tap Zoom
     if (e.touches.length === 1) {
-        const now = new Date().getTime();
-        const timeDiff = now - lastTapTime;
-        if (timeDiff < 300 && timeDiff > 0) {
-            currentScale = currentScale > 1 ? 1 : 2.5;
-            currentX = 0;
-            currentY = 0;
-            updateTransform();
-            e.preventDefault();
-        }
-        lastTapTime = now;
+        const currentTime = new Date().getTime();
+        const tapLength = currentTime - lastTapTime;
 
-        if (currentScale > 1) {
-            startX = e.touches[0].clientX - currentX;
-            startY = e.touches[0].clientY - currentY;
+        if (tapLength < 300 && tapLength > 0) {
+            e.preventDefault();
+            if (scale > 1) {
+                applyZoom(1);
+            } else {
+                applyZoom(2.2);
+            }
+        } else if (scale > 1) {
+            // بدء التحريك عند التكبير
+            isPanning = true;
+            startX = e.touches[0].clientX - pointX;
+            startY = e.touches[0].clientY - pointY;
         }
-    } else if (e.touches.length === 2) {
+        lastTapTime = currentTime;
+    } 
+    // 2. Pinch to Zoom
+    else if (e.touches.length === 2) {
+        isPanning = false;
         initialPinchDistance = getPinchDistance(e);
     }
 }, { passive: false });
 
 zoomWrapper.addEventListener('touchmove', (e) => {
+    // معالجة Pinch Zoom بأصبعين
     if (e.touches.length === 2 && initialPinchDistance) {
         e.preventDefault();
         const newDistance = getPinchDistance(e);
-        const zoomFactor = newDistance / initialPinchDistance;
-        
-        let targetScale = currentScale * zoomFactor;
-        currentScale = Math.min(Math.max(minScale, targetScale), maxScale);
+        const factor = newDistance / initialPinchDistance;
+        applyZoom(scale * factor);
         initialPinchDistance = newDistance;
-        updateTransform();
-    } else if (e.touches.length === 1 && currentScale > 1) {
+    } 
+    // معالجة السحب والتحريك بأصبع واحد عند التكبير
+    else if (e.touches.length === 1 && isPanning && scale > 1) {
         e.preventDefault();
-        currentX = e.touches[0].clientX - startX;
-        currentY = e.touches[0].clientY - startY;
+        pointX = e.touches[0].clientX - startX;
+        pointY = e.touches[0].clientY - startY;
         updateTransform();
     }
 }, { passive: false });
@@ -136,11 +154,16 @@ zoomWrapper.addEventListener('touchend', (e) => {
     if (e.touches.length < 2) {
         initialPinchDistance = null;
     }
+    if (e.touches.length === 0) {
+        isPanning = false;
+    }
 });
 
-// تهيئة مكتبة التقليب
+// ==========================================
+// 5. تهيئة مكتبة StPageFlip
+// ==========================================
 document.addEventListener('DOMContentLoaded', function() {
-    const pageFlip = new St.PageFlip(flipbookEl, {
+    pageFlipInstance = new St.PageFlip(flipbookEl, {
         width: 450,
         height: 650,
         size: 'stretch',
@@ -155,7 +178,7 @@ document.addEventListener('DOMContentLoaded', function() {
         flippingTime: 600
     });
 
-    pageFlip.loadFromHTML(document.querySelectorAll('.page'));
+    pageFlipInstance.loadFromHTML(document.querySelectorAll('.page'));
 
     const hideTutorial = () => {
         const tutorial = document.getElementById('tutorial');
@@ -166,16 +189,16 @@ document.addEventListener('DOMContentLoaded', function() {
     document.body.addEventListener('mousedown', hideTutorial, { once: true });
 
     document.getElementById('btn-prev').addEventListener('click', () => {
-        pageFlip.flipPrev();
+        if (scale === 1) pageFlipInstance.flipPrev();
         hideTutorial();
     });
     
     document.getElementById('btn-next').addEventListener('click', () => {
-        pageFlip.flipNext();
+        if (scale === 1) pageFlipInstance.flipNext();
         hideTutorial();
     });
 
-    pageFlip.on('flip', (e) => {
+    pageFlipInstance.on('flip', (e) => {
         playPaperSound();
         currentPage = e.data + 1;
         document.getElementById('counter').innerText = `${currentPage} / ${totalPages}`;
